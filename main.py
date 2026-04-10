@@ -8,6 +8,8 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
+from sklearn.compose import ColumnTransformer
+
 
 def print_eval(X, y, model):
     preds = model.predict(X)
@@ -288,7 +290,22 @@ def main():
     model.fit(X_train_combo, y_train)
     print(model.score(X_val_combo, y_val))
     
+    preprocessor = ColumnTransformer([
+        # nome          filtro              colonne
+        ("numeric",     StandardScaler(),   numeric_vars + binary_vars  ),
+        ("categorical", OneHotEncoder(),    categorical_vars            )
+    ])
     
+    X_train_proc    = preprocessor.fit_transform(data_train)
+    X_val_proc      = preprocessor.transform(data_val)
+    
+    assert(np.array_equal(X_val_combo, X_val_proc))
+    
+    # Same result as before
+    
+    model = Ridge()
+    model.fit(X_train_proc, y_train)
+    model.score(X_val_proc, y_val)
     
     # plt.show()
     
