@@ -307,6 +307,27 @@ def main():
     model.fit(X_train_proc, y_train)
     model.score(X_val_proc, y_val)
     
+    # Passthrough is used to ignore a column, in our case 0s and 1s are already scaled so we don't need to scale them 
+    # This becomes useful later when we use remainder which acts on all columns not considered here
+    # default of remainder is "Drop" so with this we still use the column
+    
+    model = Pipeline([
+        ("preproc", ColumnTransformer([
+            ("numeric",     StandardScaler(),   numeric_vars),
+            ("binary",      "passthrough",      binary_vars)
+            ("caterorical", OneHotEncoder(),    categorical_vars)
+        ])),
+        ("regr", Ridge())
+    ])
+    
+    model.fit(data_train, y_train)
+    print(model.score(data_val, y_val))
+    
+    print(pd.Series(
+        model.named_steps["preproc"].named_transformers_["numeric"].mean_,
+        index=numeric_vars + binary_vars
+    ))
+    
     # plt.show()
     
 if __name__ == "__main__":
