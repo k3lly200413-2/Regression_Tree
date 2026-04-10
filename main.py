@@ -271,6 +271,23 @@ def main():
     
     print(model.score(X_val_cat, y_val))
     
+    scalre = StandardScaler()
+    encoder = OneHotEncoder(sparse_output=False)
+    
+    X_train_combo = np.c_[
+        scalre.fit_transform(X_train_num),
+        encoder.fit_transform(X_train_cat)
+    ]
+    
+    X_val_combo = np.c_[
+        scalre.transform(X_val_num),
+        encoder.transform(X_val_cat)
+    ]
+    
+    model = Ridge()
+    model.fit(X_train_combo, y_train)
+    print(model.score(X_val_combo, y_val))
+    
     
     
     # plt.show()
