@@ -5,10 +5,11 @@ import os
 from urllib.request import urlretrieve
 
 from sklearn.linear_model import Ridge
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import GridSearchCV, KFold
 
 
 def print_eval(X, y, model):
@@ -29,6 +30,15 @@ def check_promo2_month(row):
     # since Date is a single date and not a series we can use .month and we don't need dt.month#
     return row["Date"].month in row["Promo2Months"]
 
+def extract_date_fields(X):
+    result = {}
+    # col is just name of column
+    for col in X.columns:
+        result[f"{col}_day"]        = X[col].dt.day
+        result[f"{col}_month"]      = X[col].dt.month
+        result[f"{col}_dayOfWeek"]  = X[col].dt.dayofweek
+    print(result)
+    return pd.DataFrame(result)
 
 def main():
     download(   "rossmann-train.csv.gz", "https://github.com/datascienceunibo/dialab2024/raw/main/Regressione_con_Alberi/rossmann-train.csv.gz")
@@ -314,7 +324,7 @@ def main():
     model = Pipeline([
         ("preproc", ColumnTransformer([
             ("numeric",     StandardScaler(),   numeric_vars),
-            ("binary",      "passthrough",      binary_vars)
+            ("binary",      "passthrough",      binary_vars),
             ("caterorical", OneHotEncoder(),    categorical_vars)
         ])),
         ("regr", Ridge())
@@ -325,10 +335,82 @@ def main():
     
     print(pd.Series(
         model.named_steps["preproc"].named_transformers_["numeric"].mean_,
-        index=numeric_vars + binary_vars
+        index=numeric_vars
     ))
     
+    model = Pipeline([
+    ("preproc", ColumnTransformer([
+        ("numeric", StandardScaler(), numeric_vars),  # not ...
+        ("binary", "passthrough", binary_vars),
+        ("categorical", OneHotEncoder(), categorical_vars)
+    ])),
+    ("regr", Ridge())
+])
+    
+    grid = {
+        # variazione dell'intero filtro da usare 
+        # Go to preproc->numeric and put either passthrough and StandardScaler and see what happens
+        "preproc__numeric": ["passthrough", StandardScaler()],
+
+        # variazione di un singolo parametro di un filtro 
+        # preproc->categorical->drop param and set it to None or first
+        "preproc__categorical__drop": [None, "first"]
+    }
+    
+    kf = KFold(3, shuffle=True, random_state=42)
+    gs = GridSearchCV(model, grid, cv=kf)
+    gs.fit(data_train, y_train)
+
+    # il metodo sample seleziona casualmente un sottoinsieme di righe del DataFrame
+    data_train_sample = data_train.sample(60000, random_state=42)
+    # il metodo reindex_like seleziona dalla serie le istanze corrispondenti
+    y_train_sample = y_train.reindex_like(data_train_sample)
+
+    print(pd.DataFrame(gs.cv_results_).sort_values("rank_test_score"))
+    
+    model = Pipeline([
+        ("preproc", ColumnTransformer([
+            ("numeric", PolynomialFeatures(include_bias=False), numeric_vars + binary_vars),
+            ("categorical", OneHotEncoder(), categorical_vars)
+        ])),
+        ("regr", Ridge())
+    ])
+    
+    grid = {
+        "preproc__numeric__degree" : [1, 2, 3],
+        "regr__alpha": [0.01, 1] 
+    }
+    
+    gs = GridSearchCV(model, grid, cv=kf)
+    gs.fit(data_train_sample, y_train_sample)
+    
+    print(gs.best_params_)
+    # print(gs.score(data_val, y_val))
+    
+    model = Pipeline([
+        ("preproc", ColumnTransformer([
+            ("numeric", Pipeline([
+                ("scaler", StandardScaler()),
+                ("poly", PolynomialFeatures(include_bias=False))
+                ]), numeric_vars + binary_vars),
+            ("categorical", OneHotEncoder(), categorical_vars)
+        ])),
+        ("regr", Ridge())
+    ])
+    
+    grid = {
+        "preproc__numeric__poly__degree": [1, 2, 3],
+        "regr__alpha": [0.01, 1]
+    }
+    gs = GridSearchCV(model, grid, cv=kf)
+    gs.fit(data_train_sample, y_train_sample)
+    print(gs.best_params_)
+
+    print(gs.score(data_val, y_val))
+    
     # plt.show()
+    
+    extract_date_fields(data_train[["Date"]])
     
 if __name__ == "__main__":
     main()
