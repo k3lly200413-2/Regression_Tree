@@ -4,13 +4,26 @@ import matplotlib.pyplot as plt
 import os
 from urllib.request import urlretrieve
 
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, LinearRegression
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures, FunctionTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.tree import DecisionTreeRegressor, export_text, plot_tree
 
+def plot_model_on_data(X, y, model=None):
+    plt.figure(figsize=(10, 7))
+    plt.scatter(X, y)
+    if model is not None:
+        xlim, ylim = plt.xlim(), plt.ylim()
+        line_x = np.linspace(xlim[0], xlim[1], 100)
+        line_x_df = pd.DataFrame(line_x[:, None], columns=X.columns)
+        line_y = model.predict(line_x_df)
+        plt.plot(line_x, line_y, c="red", lw=3)
+        plt.xlim(xlim); plt.ylim(ylim)
+    plt.grid()
+    plt.xlabel("Temperatura (°C)"); plt.ylabel("Consumi (GW)")
 
 def print_eval(X, y, model):
     preds = model.predict(X)
@@ -41,36 +54,36 @@ def extract_date_fields(X):
     return pd.DataFrame(result)
 
 def main():
-    download(   "rossmann-train.csv.gz", "https://github.com/datascienceunibo/dialab2024/raw/main/Regressione_con_Alberi/rossmann-train.csv.gz")
-    download(   "rossmann-stores.csv", "https://github.com/datascienceunibo/dialab2024/raw/main/Preprocessing_con_pandas/rossmann-stores.csv")
+    # download(   "rossmann-train.csv.gz", "https://github.com/datascienceunibo/dialab2024/raw/main/Regressione_con_Alberi/rossmann-train.csv.gz")
+    # download(   "rossmann-stores.csv", "https://github.com/datascienceunibo/dialab2024/raw/main/Preprocessing_con_pandas/rossmann-stores.csv")
 
-    data_sales = pd.read_csv(
-        "rossmann-train.csv.gz",
-        parse_dates=["Date"],
-        dtype={"StateHoliday": "category"},
-        compression="gzip",
-    )
+    # data_sales = pd.read_csv(
+    #     "rossmann-train.csv.gz",
+    #     parse_dates=["Date"],
+    #     dtype={"StateHoliday": "category"},
+    #     compression="gzip",
+    # )
     
-    data_sales.sample(10000, random_state=42).plot.scatter("Customers", "Sales")
+    # data_sales.sample(10000, random_state=42).plot.scatter("Customers", "Sales")
     
-    data_open = data_sales.loc[data_sales["Open"] == 1].drop(columns=["Open"])
+    # data_open = data_sales.loc[data_sales["Open"] == 1].drop(columns=["Open"])
     
-    data_stores = pd.read_csv("rossmann-stores.csv")
+    # data_stores = pd.read_csv("rossmann-stores.csv")
     
-    data = pd.merge(data_open, data_stores, left_on=["Store"], right_on=["Store"])
+    # data = pd.merge(data_open, data_stores, left_on=["Store"], right_on=["Store"])
     
-    # print(data.keys())
+    # # print(data.keys())
     
-    promo2_started = (
-        # if date we are at now is later than the year since the shop started the promo
-        (data["Date"].dt.year > data["Promo2SinceYear"])
-        | (
-            # Or the same year
-            (data["Date"].dt.year == data["Promo2SinceYear"])
-            # and the week is later than when it started
-            & (data["Date"].dt.isocalendar().week >= data["Promo2SinceWeek"])
-        )
-    )
+    # promo2_started = (
+    #     # if date we are at now is later than the year since the shop started the promo
+    #     (data["Date"].dt.year > data["Promo2SinceYear"])
+    #     | (
+    #         # Or the same year
+    #         (data["Date"].dt.year == data["Promo2SinceYear"])
+    #         # and the week is later than when it started
+    #         & (data["Date"].dt.isocalendar().week >= data["Promo2SinceWeek"])
+    #     )
+    # )
     
     # Months when promotion was active
     # The form is 
@@ -81,14 +94,14 @@ def main():
 
     # print(data["PromoInterval"])
     
-    months_map = {
-        np.nan: [],
-        "Jan,Apr,Jul,Oct":  [1, 4, 7, 10],
-        "Feb,May,Aug,Nov":  [2, 5, 8, 11],
-        "Mar,Jun,Sept,Dec": [3, 6, 9, 12]
-    }
+    # months_map = {
+    #     np.nan: [],
+    #     "Jan,Apr,Jul,Oct":  [1, 4, 7, 10],
+    #     "Feb,May,Aug,Nov":  [2, 5, 8, 11],
+    #     "Mar,Jun,Sept,Dec": [3, 6, 9, 12]
+    # }
     
-    data["Promo2Months"] = data["PromoInterval"].map(months_map)
+    # data["Promo2Months"] = data["PromoInterval"].map(months_map)
     # Now instead of strings we have numbers
     # 0                    []
     # 1         [1, 4, 7, 10]
@@ -102,7 +115,7 @@ def main():
     
     # print(data["Promo2Months"])
     
-    is_promo2_month = data.apply(check_promo2_month, axis=1)
+    # is_promo2_month = data.apply(check_promo2_month, axis=1)
     
     # now of the form 
     #
@@ -117,29 +130,29 @@ def main():
     # We add a column called Promo2Active which checks if the promotion has started 
     # if it has it also has to be in the month that the date is in
     # Basically Checks, has it started? And is it active in this month?
-    data["Promo2Active"] = promo2_started & is_promo2_month
+    # data["Promo2Active"] = promo2_started & is_promo2_month
     
     # print(data["CompetitionOpenSinceMonth"])
     
-    data["CompetitionOpen"] = (
-        data["CompetitionOpenSinceYear"].isna()
-        | (data["Date"].dt.year > data["CompetitionOpenSinceYear"])
-        | (
-            (data["Date"].dt.year == data["CompetitionOpenSinceYear"])
-            & (data["Date"].dt.month >= data["CompetitionOpenSinceMonth"])
-        )
-    )
+    # data["CompetitionOpen"] = (
+    #     data["CompetitionOpenSinceYear"].isna()
+    #     | (data["Date"].dt.year > data["CompetitionOpenSinceYear"])
+    #     | (
+    #         (data["Date"].dt.year == data["CompetitionOpenSinceYear"])
+    #         & (data["Date"].dt.month >= data["CompetitionOpenSinceMonth"])
+    #     )
+    # )
     
     # Get the row that has a NaN in the column CompetitionDistance, get the column CompetitionDistance 
     # set this NaN to the max
-    data.loc[data["CompetitionDistance"].isna(), "CompetitionDistance"] = data["CompetitionDistance"].max()
+    # data.loc[data["CompetitionDistance"].isna(), "CompetitionDistance"] = data["CompetitionDistance"].max()
     
-    train_test_split_date = "2015-06-19"
-    data_train = data[data["Date"] <= train_test_split_date]
-    data_val = data[data["Date"] > train_test_split_date]
+    # train_test_split_date = "2015-06-19"
+    # data_train = data[data["Date"] <= train_test_split_date]
+    # data_val = data[data["Date"] > train_test_split_date]
     
-    y_train = data_train["Sales"]
-    y_val = data_val["Sales"]
+    # y_train = data_train["Sales"]
+    # y_val = data_val["Sales"]
     
     
     # 1. alcune variabili (es. `CompetitionDistance`) 
@@ -156,9 +169,9 @@ def main():
     #   (sono di tipo "nominale")
     
     
-    numeric_vars = ["CompetitionDistance"]
-    binary_vars = ["Promo", "SchoolHoliday", "Promo2Active", "CompetitionOpen"]
-    categorical_vars = ["StateHoliday", "StoreType", "Assortment"]
+    # numeric_vars = ["CompetitionDistance"]
+    # binary_vars = ["Promo", "SchoolHoliday", "Promo2Active", "CompetitionOpen"]
+    # categorical_vars = ["StateHoliday", "StoreType", "Assortment"]
     
 #     X_train_num = data_train[numeric_vars + binary_vars]
 #     X_val_num   = data_val[numeric_vars + binary_vars]
@@ -414,20 +427,20 @@ def main():
     
 #     # Applies fit and transform to a given function, this then allows the function 
 #     # to be put in a Pipeline#
-    date_transformer = FunctionTransformer(extract_date_fields)
-    #  print(date_transformer.fit_transform(data_train[["Date"]]).sample(5, random_state=42))
+    # date_transformer = FunctionTransformer(extract_date_fields)
+    # #  print(date_transformer.fit_transform(data_train[["Date"]]).sample(5, random_state=42))
     
-    transformer = Pipeline([
-        ("cols", ColumnTransformer([
-            ("num", "passthrough", numeric_vars + binary_vars),
-            ("cat", OneHotEncoder(), categorical_vars),
-            ("date", date_transformer, ["Date"])
-        ])),
-        ("scale", StandardScaler())
-    ])
+    # transformer = Pipeline([
+    #     ("cols", ColumnTransformer([
+    #         ("num", "passthrough", numeric_vars + binary_vars),
+    #         ("cat", OneHotEncoder(), categorical_vars),
+    #         ("date", date_transformer, ["Date"])
+    #     ])),
+    #     ("scale", StandardScaler())
+    # ])
     
-    X_train = transformer.fit_transform(data_train)
-    X_val = transformer.transform(data_val)
+    # X_train = transformer.fit_transform(data_train)
+    # X_val = transformer.transform(data_val)
     
     # r_ short hand for shorthand for concatenating arrays but to remember thing of range, 
     # goes from start to finish or concatenates arrays to make a 1-D array
@@ -445,14 +458,50 @@ def main():
     #           accesses the names of the columns in categorical vars
     #   ["Date_day", "Date_month", "Date_dayOfWeek"], just appends them
     # Returns a np.array
-    X_names = np.r_[
-        numeric_vars,
-        binary_vars,
-        transformer.named_steps["cols"].named_transformers_["cat"].get_feature_names_out(categorical_vars),
-        ["Date_day", "Date_month", "Date_dayOfWeek"]
-    ].tolist()
+    # X_names = np.r_[
+    #     numeric_vars,
+    #     binary_vars,
+    #     transformer.named_steps["cols"].named_transformers_["cat"].get_feature_names_out(categorical_vars),
+    #     ["Date_day", "Date_month", "Date_dayOfWeek"]
+    # ].tolist()
     
-    print(", ".join(X_names))
+    # print(", ".join(X_names))
+    
+    download("power.csv", "https://git.io/vpaM1")
+    power = pd.read_csv("power.csv", index_col="date", parse_dates=["date"])
+    is_train = power.index.year < 2016
+    power_X_train = power.loc[is_train, ["temp"]]
+    power_y_train = power.loc[is_train, "demand"]
+    power_X_val = power.loc[~is_train, ["temp"]]
+    power_y_val = power.loc[~is_train, "demand"]
+    
+    model = Pipeline([
+        ("poly", PolynomialFeatures(degree=3, include_bias=False)),
+        ("regr", LinearRegression())
+    ])
+    
+    model.fit(power_X_train, power_y_train)
+    # plot_model_on_data(power_X_val, power_y_val, model)
+    print(model.score(power_X_val, power_y_val))
+    
+    model = DecisionTreeRegressor(max_depth=3, random_state=42)
+    
+    model.fit(power_X_train, power_y_train)
+    
+    # Feature0 is the only one present for now which is the temperature
+    
+    # print(export_text(model))
+    
+    # plot_model_on_data(power_X_val, power_y_val, model)
+    plt.figure(figsize=(12, 6))
+    plot_tree(model)
+    
+    # get amount of leaves the tree has (number of different results it got to)
+    print(model.get_n_leaves())
+    
+    print(model.score(power_X_val, power_y_val))
+    
+    plt.show()
     
 if __name__ == "__main__":
     main()
