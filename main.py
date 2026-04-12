@@ -5,7 +5,7 @@ import os
 from urllib.request import urlretrieve
 
 from sklearn.linear_model import Ridge
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures, FunctionTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
 from sklearn.compose import ColumnTransformer
@@ -37,7 +37,7 @@ def extract_date_fields(X):
         result[f"{col}_day"]        = X[col].dt.day
         result[f"{col}_month"]      = X[col].dt.month
         result[f"{col}_dayOfWeek"]  = X[col].dt.dayofweek
-    print(result)
+    #print(result)
     return pd.DataFrame(result)
 
 def main():
@@ -160,257 +160,299 @@ def main():
     binary_vars = ["Promo", "SchoolHoliday", "Promo2Active", "CompetitionOpen"]
     categorical_vars = ["StateHoliday", "StoreType", "Assortment"]
     
-    X_train_num = data_train[numeric_vars + binary_vars]
-    X_val_num   = data_val[numeric_vars + binary_vars]
+#     X_train_num = data_train[numeric_vars + binary_vars]
+#     X_val_num   = data_val[numeric_vars + binary_vars]
     
-    l_r_m = Ridge()
-    l_r_m.fit(X_train_num, y_train)
+#     l_r_m = Ridge()
+#     l_r_m.fit(X_train_num, y_train)
     
-    # print(l_r_m.score(X_val_num, y_val))
+#     # print(l_r_m.score(X_val_num, y_val))
     
-    model = Pipeline([
-        ("Scaler", StandardScaler()),
-        ("Model", Ridge())
-    ])
+#     model = Pipeline([
+#         ("Scaler", StandardScaler()),
+#         ("Model", Ridge())
+#     ])
     
-    model.fit(X_train_num, y_train)
+#     model.fit(X_train_num, y_train)
     
-    # print(model.score(X_val_num, y_val))
+#     # print(model.score(X_val_num, y_val))
     
-    # Categorical Columns
-    X_sample = data_train[["SchoolHoliday", "StateHoliday"]]
-    # print(X_sample.head(5))
+#     # Categorical Columns
+#     X_sample = data_train[["SchoolHoliday", "StateHoliday"]]
+#     # print(X_sample.head(5))
     
-    # Unique values that these can assume are:
-    # [0 1]
-    # ['0', 'a', 'b', 'c']
-    #   Categories (4, str): ['0', 'a', 'b', 'c']
-    # print(X_sample["SchoolHoliday"].unique())
-    # print(X_sample["StateHoliday"].unique())
+#     # Unique values that these can assume are:
+#     # [0 1]
+#     # ['0', 'a', 'b', 'c']
+#     #   Categories (4, str): ['0', 'a', 'b', 'c']
+#     # print(X_sample["SchoolHoliday"].unique())
+#     # print(X_sample["StateHoliday"].unique())
     
-    # without sparse_output=False
-    # <Compressed Sparse Row sparse matrix of dtype 'float64'
-	# with 1608220 stored elements and shape (804110, 6)>
-    # Coords	Values
-    # (0, 0)	1.0
-    # (0, 2)	1.0
-    # (1, 0)	1.0
-    # (1, 2)	1.0
-    # (2, 0)	1.0
-    # (2, 2)	1.0
-    # (3, 0)	1.0
-    # (3, 2)	1.0
-    # (4, 0)	1.0
-    # (4, 2)	1.0
-    # (5, 0)	1.0
-    # (5, 2)	1.0
-    # (6, 0)	1.0
-    # (6, 2)	1.0
-    # (7, 0)	1.0
-    # (7, 2)	1.0
-    # (8, 0)	1.0
-    # (8, 2)	1.0
-    # (9, 0)	1.0
-    # (9, 2)	1.0
-    # (10, 0)	1.0
-    # (10, 2)	1.0
-    # (11, 0)	1.0
-    # (11, 2)	1.0
-    # (12, 0)	1.0
-    # :	:
+#     # without sparse_output=False
+#     # <Compressed Sparse Row sparse matrix of dtype 'float64'
+# 	# with 1608220 stored elements and shape (804110, 6)>
+#     # Coords	Values
+#     # (0, 0)	1.0
+#     # (0, 2)	1.0
+#     # (1, 0)	1.0
+#     # (1, 2)	1.0
+#     # (2, 0)	1.0
+#     # (2, 2)	1.0
+#     # (3, 0)	1.0
+#     # (3, 2)	1.0
+#     # (4, 0)	1.0
+#     # (4, 2)	1.0
+#     # (5, 0)	1.0
+#     # (5, 2)	1.0
+#     # (6, 0)	1.0
+#     # (6, 2)	1.0
+#     # (7, 0)	1.0
+#     # (7, 2)	1.0
+#     # (8, 0)	1.0
+#     # (8, 2)	1.0
+#     # (9, 0)	1.0
+#     # (9, 2)	1.0
+#     # (10, 0)	1.0
+#     # (10, 2)	1.0
+#     # (11, 0)	1.0
+#     # (11, 2)	1.0
+#     # (12, 0)	1.0
+#     # :	:
     
-    # With sparse_output=False
-    #[[1. 0. 1. 0. 0. 0.]
-    # [1. 0. 1. 0. 0. 0.]
-    # [1. 0. 1. 0. 0. 0.]
-    # ...
-    # [0. 1. 0. 1. 0. 0.]
-    # [0. 1. 0. 1. 0. 0.]
-    # [0. 1. 0. 1. 0. 0.]]
+#     # With sparse_output=False
+#     #[[1. 0. 1. 0. 0. 0.]
+#     # [1. 0. 1. 0. 0. 0.]
+#     # [1. 0. 1. 0. 0. 0.]
+#     # ...
+#     # [0. 1. 0. 1. 0. 0.]
+#     # [0. 1. 0. 1. 0. 0.]
+#     # [0. 1. 0. 1. 0. 0.]]
 
-    # By adding drop="first" we drop the first column of each category 
-    # we do this because we can deduce the result of the first by looking at the
-    # other(s)#
+#     # By adding drop="first" we drop the first column of each category 
+#     # we do this because we can deduce the result of the first by looking at the
+#     # other(s)#
     
-    #
-    # In questo esempio sono state scartate le variabili `SchoolHoliday_0` e 
-    #   `StateHoliday_0`
+#     #
+#     # In questo esempio sono state scartate le variabili `SchoolHoliday_0` e 
+#     #   `StateHoliday_0`
 
-    # - i casi `SchoolHoliday_0` si riconoscono implicitamente da 
-    #   `SchoolHoliday_1 = 0`
-    # - i casi `StateHoliday_0` si riconoscono da tutte le colonne `StateHoliday` a 0
+#     # - i casi `SchoolHoliday_0` si riconoscono implicitamente da 
+#     #   `SchoolHoliday_1 = 0`
+#     # - i casi `StateHoliday_0` si riconoscono da tutte le colonne `StateHoliday` a 0
 
-    # Il vantaggio di questo accorgimento è che si evita di introdurre 
-    #   variabili collineari che possono causare problemi in alcuni modelli 
-    #   (es. modelli lineari senza regolarizzazione)
+#     # Il vantaggio di questo accorgimento è che si evita di introdurre 
+#     #   variabili collineari che possono causare problemi in alcuni modelli 
+#     #   (es. modelli lineari senza regolarizzazione)
 
-    # Lo svantaggio è che si introduce un'asimmetria nella rappresentazione dei dati 
-    #   che può causare bias in altri modelli 
-    #   (es. modelli lineari con regolarizzazione)
+#     # Lo svantaggio è che si introduce un'asimmetria nella rappresentazione dei dati 
+#     #   che può causare bias in altri modelli 
+#     #   (es. modelli lineari con regolarizzazione)
     
-    encoder = OneHotEncoder(sparse_output=False)
+#     encoder = OneHotEncoder(sparse_output=False)
     
-    # print(encoder.fit_transform(X_sample))
+#     # print(encoder.fit_transform(X_sample))
     
-    # Takes the data and stores the categories (fit), the applies a function to the data 
-    # this is done by transform, in this case it just sets either 1s or 0s to the values
-    # of these categories, this transform function can be anything else#
-    encoder.fit_transform(X_sample)
+#     # Takes the data and stores the categories (fit), the applies a function to the data 
+#     # this is done by transform, in this case it just sets either 1s or 0s to the values
+#     # of these categories, this transform function can be anything else#
+#     encoder.fit_transform(X_sample)
     
-    # print(encoder.get_feature_names_out())
+#     # print(encoder.get_feature_names_out())
     
-    # print(pd.DataFrame(
-    #     encoder.transform(X_sample),
-    #     columns=encoder.get_feature_names_out()
-    # ).head(5))
+#     # print(pd.DataFrame(
+#     #     encoder.transform(X_sample),
+#     #     columns=encoder.get_feature_names_out()
+#     # ).head(5))
     
-    X_train_cat = data_train[categorical_vars]
-    X_val_cat   = data_val[categorical_vars]
+#     X_train_cat = data_train[categorical_vars]
+#     X_val_cat   = data_val[categorical_vars]
     
-    encoder = OneHotEncoder()
+#     encoder = OneHotEncoder()
     
-    model = Ridge()
-    model.fit(encoder.fit_transform(X_train_cat), y_train)
+#     model = Ridge()
+#     model.fit(encoder.fit_transform(X_train_cat), y_train)
     
-    # print(model.score(encoder.transform(X_val_cat), y_val))
+#     # print(model.score(encoder.transform(X_val_cat), y_val))
     
-    model = Pipeline([
-        ("encode", OneHotEncoder()),
-        ("Model", Ridge())
-    ])
+#     model = Pipeline([
+#         ("encode", OneHotEncoder()),
+#         ("Model", Ridge())
+#     ])
     
-    model.fit(X_train_cat, y_train)
+#     model.fit(X_train_cat, y_train)
     
-    print(model.score(X_val_cat, y_val))
+#     print(model.score(X_val_cat, y_val))
     
-    scalre = StandardScaler()
-    encoder = OneHotEncoder(sparse_output=False)
+#     scalre = StandardScaler()
+#     encoder = OneHotEncoder(sparse_output=False)
     
-    X_train_combo = np.c_[
-        scalre.fit_transform(X_train_num),
-        encoder.fit_transform(X_train_cat)
-    ]
+#     X_train_combo = np.c_[
+#         scalre.fit_transform(X_train_num),
+#         encoder.fit_transform(X_train_cat)
+#     ]
     
-    X_val_combo = np.c_[
-        scalre.transform(X_val_num),
-        encoder.transform(X_val_cat)
-    ]
+#     X_val_combo = np.c_[
+#         scalre.transform(X_val_num),
+#         encoder.transform(X_val_cat)
+#     ]
     
-    model = Ridge()
-    model.fit(X_train_combo, y_train)
-    print(model.score(X_val_combo, y_val))
+#     model = Ridge()
+#     model.fit(X_train_combo, y_train)
+#     print(model.score(X_val_combo, y_val))
     
-    preprocessor = ColumnTransformer([
-        # nome          filtro              colonne
-        ("numeric",     StandardScaler(),   numeric_vars + binary_vars  ),
-        ("categorical", OneHotEncoder(),    categorical_vars            )
-    ])
+#     preprocessor = ColumnTransformer([
+#         # nome          filtro              colonne
+#         ("numeric",     StandardScaler(),   numeric_vars + binary_vars  ),
+#         ("categorical", OneHotEncoder(),    categorical_vars            )
+#     ])
     
-    X_train_proc    = preprocessor.fit_transform(data_train)
-    X_val_proc      = preprocessor.transform(data_val)
+#     X_train_proc    = preprocessor.fit_transform(data_train)
+#     X_val_proc      = preprocessor.transform(data_val)
     
-    assert(np.array_equal(X_val_combo, X_val_proc))
+#     assert(np.array_equal(X_val_combo, X_val_proc))
     
-    # Same result as before
+#     # Same result as before
     
-    model = Ridge()
-    model.fit(X_train_proc, y_train)
-    model.score(X_val_proc, y_val)
+#     model = Ridge()
+#     model.fit(X_train_proc, y_train)
+#     model.score(X_val_proc, y_val)
     
-    # Passthrough is used to ignore a column, in our case 0s and 1s are already scaled so we don't need to scale them 
-    # This becomes useful later when we use remainder which acts on all columns not considered here
-    # default of remainder is "Drop" so with this we still use the column
+#     # Passthrough is used to ignore a column, in our case 0s and 1s are already scaled so we don't need to scale them 
+#     # This becomes useful later when we use remainder which acts on all columns not considered here
+#     # default of remainder is "Drop" so with this we still use the column
     
-    model = Pipeline([
-        ("preproc", ColumnTransformer([
-            ("numeric",     StandardScaler(),   numeric_vars),
-            ("binary",      "passthrough",      binary_vars),
-            ("caterorical", OneHotEncoder(),    categorical_vars)
+#     model = Pipeline([
+#         ("preproc", ColumnTransformer([
+#             ("numeric",     StandardScaler(),   numeric_vars),
+#             ("binary",      "passthrough",      binary_vars),
+#             ("caterorical", OneHotEncoder(),    categorical_vars)
+#         ])),
+#         ("regr", Ridge())
+#     ])
+    
+#     model.fit(data_train, y_train)
+#     print(model.score(data_val, y_val))
+    
+#     print(pd.Series(
+#         model.named_steps["preproc"].named_transformers_["numeric"].mean_,
+#         index=numeric_vars
+#     ))
+    
+#     model = Pipeline([
+#     ("preproc", ColumnTransformer([
+#         ("numeric", StandardScaler(), numeric_vars),  # not ...
+#         ("binary", "passthrough", binary_vars),
+#         ("categorical", OneHotEncoder(), categorical_vars)
+#     ])),
+#     ("regr", Ridge())
+# ])
+    
+#     grid = {
+#         # variazione dell'intero filtro da usare 
+#         # Go to preproc->numeric and put either passthrough and StandardScaler and see what happens
+#         "preproc__numeric": ["passthrough", StandardScaler()],
+
+#         # variazione di un singolo parametro di un filtro 
+#         # preproc->categorical->drop param and set it to None or first
+#         "preproc__categorical__drop": [None, "first"]
+#     }
+    
+#     kf = KFold(3, shuffle=True, random_state=42)
+#     gs = GridSearchCV(model, grid, cv=kf)
+#     gs.fit(data_train, y_train)
+
+#     # il metodo sample seleziona casualmente un sottoinsieme di righe del DataFrame
+#     data_train_sample = data_train.sample(60000, random_state=42)
+#     # il metodo reindex_like seleziona dalla serie le istanze corrispondenti
+#     y_train_sample = y_train.reindex_like(data_train_sample)
+
+#     print(pd.DataFrame(gs.cv_results_).sort_values("rank_test_score"))
+    
+#     model = Pipeline([
+#         ("preproc", ColumnTransformer([
+#             ("numeric", PolynomialFeatures(include_bias=False), numeric_vars + binary_vars),
+#             ("categorical", OneHotEncoder(), categorical_vars)
+#         ])),
+#         ("regr", Ridge())
+#     ])
+    
+#     grid = {
+#         "preproc__numeric__degree" : [1, 2, 3],
+#         "regr__alpha": [0.01, 1] 
+#     }
+    
+#     gs = GridSearchCV(model, grid, cv=kf)
+#     gs.fit(data_train_sample, y_train_sample)
+    
+#     print(gs.best_params_)
+#     # print(gs.score(data_val, y_val))
+    
+#     model = Pipeline([
+#         ("preproc", ColumnTransformer([
+#             ("numeric", Pipeline([
+#                 ("scaler", StandardScaler()),
+#                 ("poly", PolynomialFeatures(include_bias=False))
+#                 ]), numeric_vars + binary_vars),
+#             ("categorical", OneHotEncoder(), categorical_vars)
+#         ])),
+#         ("regr", Ridge())
+#     ])
+    
+#     grid = {
+#         "preproc__numeric__poly__degree": [1, 2, 3],
+#         "regr__alpha": [0.01, 1]
+#     }
+#     gs = GridSearchCV(model, grid, cv=kf)
+#     gs.fit(data_train_sample, y_train_sample)
+#     print(gs.best_params_)
+
+#     print(gs.score(data_val, y_val))
+    
+#     # plt.show()
+    
+#     extract_date_fields(data_train[["Date"]])
+    
+#     # Applies fit and transform to a given function, this then allows the function 
+#     # to be put in a Pipeline#
+    date_transformer = FunctionTransformer(extract_date_fields)
+    #  print(date_transformer.fit_transform(data_train[["Date"]]).sample(5, random_state=42))
+    
+    transformer = Pipeline([
+        ("cols", ColumnTransformer([
+            ("num", "passthrough", numeric_vars + binary_vars),
+            ("cat", OneHotEncoder(), categorical_vars),
+            ("date", date_transformer, ["Date"])
         ])),
-        ("regr", Ridge())
+        ("scale", StandardScaler())
     ])
     
-    model.fit(data_train, y_train)
-    print(model.score(data_val, y_val))
+    X_train = transformer.fit_transform(data_train)
+    X_val = transformer.transform(data_val)
     
-    print(pd.Series(
-        model.named_steps["preproc"].named_transformers_["numeric"].mean_,
-        index=numeric_vars
-    ))
+    # r_ short hand for shorthand for concatenating arrays but to remember thing of range, 
+    # goes from start to finish or concatenates arrays to make a 1-D array
+    # X_names represents the names of columns specified below in a single array
+    # We have:
+    #   numeric_vars: CompetitionDistance
+    #   binary_vars: Promo, SchoolHoliday, Promo2Active, CompetitionOpen
+    #   transformer
+    #       .named_steps["cols"]
+    #       .named_transformers_["cat"]
+    #       .get_feature_names_out(categorical_vars) 
+    #       which does:
+    #           accesses the attribuets of "cols"
+    #           accesses the attributes of "cat"
+    #           accesses the names of the columns in categorical vars
+    #   ["Date_day", "Date_month", "Date_dayOfWeek"], just appends them
+    # Returns a np.array
+    X_names = np.r_[
+        numeric_vars,
+        binary_vars,
+        transformer.named_steps["cols"].named_transformers_["cat"].get_feature_names_out(categorical_vars),
+        ["Date_day", "Date_month", "Date_dayOfWeek"]
+    ].tolist()
     
-    model = Pipeline([
-    ("preproc", ColumnTransformer([
-        ("numeric", StandardScaler(), numeric_vars),  # not ...
-        ("binary", "passthrough", binary_vars),
-        ("categorical", OneHotEncoder(), categorical_vars)
-    ])),
-    ("regr", Ridge())
-])
-    
-    grid = {
-        # variazione dell'intero filtro da usare 
-        # Go to preproc->numeric and put either passthrough and StandardScaler and see what happens
-        "preproc__numeric": ["passthrough", StandardScaler()],
-
-        # variazione di un singolo parametro di un filtro 
-        # preproc->categorical->drop param and set it to None or first
-        "preproc__categorical__drop": [None, "first"]
-    }
-    
-    kf = KFold(3, shuffle=True, random_state=42)
-    gs = GridSearchCV(model, grid, cv=kf)
-    gs.fit(data_train, y_train)
-
-    # il metodo sample seleziona casualmente un sottoinsieme di righe del DataFrame
-    data_train_sample = data_train.sample(60000, random_state=42)
-    # il metodo reindex_like seleziona dalla serie le istanze corrispondenti
-    y_train_sample = y_train.reindex_like(data_train_sample)
-
-    print(pd.DataFrame(gs.cv_results_).sort_values("rank_test_score"))
-    
-    model = Pipeline([
-        ("preproc", ColumnTransformer([
-            ("numeric", PolynomialFeatures(include_bias=False), numeric_vars + binary_vars),
-            ("categorical", OneHotEncoder(), categorical_vars)
-        ])),
-        ("regr", Ridge())
-    ])
-    
-    grid = {
-        "preproc__numeric__degree" : [1, 2, 3],
-        "regr__alpha": [0.01, 1] 
-    }
-    
-    gs = GridSearchCV(model, grid, cv=kf)
-    gs.fit(data_train_sample, y_train_sample)
-    
-    print(gs.best_params_)
-    # print(gs.score(data_val, y_val))
-    
-    model = Pipeline([
-        ("preproc", ColumnTransformer([
-            ("numeric", Pipeline([
-                ("scaler", StandardScaler()),
-                ("poly", PolynomialFeatures(include_bias=False))
-                ]), numeric_vars + binary_vars),
-            ("categorical", OneHotEncoder(), categorical_vars)
-        ])),
-        ("regr", Ridge())
-    ])
-    
-    grid = {
-        "preproc__numeric__poly__degree": [1, 2, 3],
-        "regr__alpha": [0.01, 1]
-    }
-    gs = GridSearchCV(model, grid, cv=kf)
-    gs.fit(data_train_sample, y_train_sample)
-    print(gs.best_params_)
-
-    print(gs.score(data_val, y_val))
-    
-    # plt.show()
-    
-    extract_date_fields(data_train[["Date"]])
+    print(", ".join(X_names))
     
 if __name__ == "__main__":
     main()
