@@ -13,6 +13,8 @@ from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.tree import DecisionTreeRegressor, export_text, plot_tree
 from sklearn.ensemble import RandomForestRegressor
 from lightgbm import LGBMRegressor
+from xgboost import XGBRegressor
+from catboost import CatBoostRegressor
 
 def plot_model_on_data(X, y, model=None):
     plt.figure(figsize=(10, 7))
@@ -535,8 +537,8 @@ def main():
     #   max_features: max amount of data points each tree can see, "sqrt" is the square root of all the data points 
     #   n_estimators: number of trees to use
     #   n_jobs: wheter or not to use multithreadding #
-    rfm = RandomForestRegressor(max_samples=0.2, max_features="sqrt", n_estimators=200, max_depth=None, n_jobs=-1)
-    rfm.fit(X_train, y_train)
+    # rfm = RandomForestRegressor(max_samples=0.2, max_features="sqrt", n_estimators=200, max_depth=None, n_jobs=-1)
+    # rfm.fit(X_train, y_train)
 
     # print_eval(X_val, y_val, rfm)
     
@@ -547,10 +549,25 @@ def main():
     # Light gradiant boost machine:
     # Takes a random guess, then adds a new guess which is trained on the previous erros
     # Does the same thing again and again#
-    lgbm = LGBMRegressor()
-    lgbm.fit(X_train, y_train)
+    # lgbm = LGBMRegressor()
+    # lgbm.fit(X_train, y_train)
     
-    print_eval(X_val, y_val, lgbm)
+    # print_eval(X_val, y_val, lgbm)
+
+    xgbm = XGBRegressor(objective='reg:squarederror', reg_alpha=0.0, reg_lambda=1.0, n_estimators=200, verbose_eval=True)
+    
+    xgbm.fit(X_train, y_train)
+    
+    print_eval(X_val, y_val, xgbm)
+    
+    pd.Series(xgbm.feature_importances_, index=X_names).sort_values(ascending=False)
+    
+    # istanziazione e addestramento: con 1000 estimatori richiede due minuti
+    catbm = CatBoostRegressor(n_estimators=1000)
+    catbm.fit(X_train, y_train)
+    
+    # valutazione di CatBoost: su questo caso di studio e senza tuning degli iperparametri è competitivo con XGBoost anche se quest'ultimo risulta comunque il migliore  
+    print_eval(X_val, y_val, catbm)
     
     plt.show()
     
