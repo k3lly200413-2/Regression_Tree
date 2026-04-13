@@ -36,7 +36,7 @@ def print_eval(X, y, model):
     r2 = r2_score(y, preds)
     print(f"   Mean squared error: {mse:.5}")
     print(f"R-squared coefficient: {r2:.5}")
-    print(f"    RMSPE: {rmspe(y, y_pred):12.4f}")
+    print(f"    RMSPE: {rmspe(y, preds):12.4f}")
 
 def download(file, url):
     if not os.path.isfile(file):
