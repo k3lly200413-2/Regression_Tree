@@ -12,6 +12,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.tree import DecisionTreeRegressor, export_text, plot_tree
 from sklearn.ensemble import RandomForestRegressor
+from lightgbm import LGBMRegressor
 
 def plot_model_on_data(X, y, model=None):
     plt.figure(figsize=(10, 7))
@@ -542,6 +543,14 @@ def main():
     # print(rfm.feature_importances_)
     
     # print(pd.Series(rfm.feature_importances_, index=X_names).sort_values(ascending=False))
+    
+    # Light gradiant boost machine:
+    # Takes a random guess, then adds a new guess which is trained on the previous erros
+    # Does the same thing again and again#
+    lgbm = LGBMRegressor()
+    lgbm.fit(X_train, y_train)
+    
+    print_eval(X_val, y_val, lgbm)
     
     plt.show()
     
