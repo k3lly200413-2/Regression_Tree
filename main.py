@@ -537,7 +537,11 @@ def main():
     rfm = RandomForestRegressor(max_samples=0.2, max_features="sqrt", n_estimators=200, max_depth=None, n_jobs=-1)
     rfm.fit(X_train, y_train)
 
-    print_eval(X_val, y_val, rfm)
+    # print_eval(X_val, y_val, rfm)
+    
+    # print(rfm.feature_importances_)
+    
+    # print(pd.Series(rfm.feature_importances_, index=X_names).sort_values(ascending=False))
     
     plt.show()
     
