@@ -11,6 +11,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, 
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.tree import DecisionTreeRegressor, export_text, plot_tree
+from sklearn.ensemble import RandomForestRegressor
 
 def plot_model_on_data(X, y, model=None):
     plt.figure(figsize=(10, 7))
@@ -483,14 +484,14 @@ def main():
         ("regr", LinearRegression())
     ])
     
-    model.fit(power_X_train, power_y_train)
+    # model.fit(power_X_train, power_y_train)
     # plot_model_on_data(power_X_val, power_y_val, model)
-    print(model.score(power_X_val, power_y_val))
+    # print(model.score(power_X_val, power_y_val))
     
     # model = DecisionTreeRegressor(max_depth=5, random_state=42)
-    model = DecisionTreeRegressor(min_samples_split=70000, random_state=42)
+    # model = DecisionTreeRegressor(min_samples_split=70000, random_state=42)
     
-    model.fit(X_train, y_train)
+    # model.fit(X_train, y_train)
     
     # Feature0 is the only one present for now which is the temperature
     
@@ -498,7 +499,7 @@ def main():
     
     # plot_model_on_data(power_X_val, power_y_val, model)
     # plt.figure(figsize=(12, 6))
-    plot_tree(model, feature_names=X_names, max_depth=3, filled=True, fontsize=8)
+    # plot_tree(model, feature_names=X_names, max_depth=3, filled=True, fontsize=8)
     
     # get amount of leaves the tree has (number of different results it got to)
     
@@ -506,12 +507,37 @@ def main():
     
     # minimum amount of samples a node can have when deciding whether to split or not, we now don't have max_deapth so this will be used
         
-    model.get_depth()
-    model.get_n_leaves()
+    #model.get_depth()
+    #model.get_n_leaves()
     
-    print(export_text(model, feature_names=X_names, max_depth=2))
+    #print(export_text(model, feature_names=X_names, max_depth=2))
     
+    # model = DecisionTreeRegressor(random_state=42)
     
+    # grid = {
+    #     "max_depth": [4, 5, 6, 7, 8],
+    #     "min_samples_split": [.05, .1, .15]
+    # }
+
+    # kf = KFold(3, shuffle=True, random_state=42)
+    # gs = GridSearchCV(model, grid, cv=kf)
+    # gs.fit(X_train, y_train)
+
+    # gs.score(X_train, y_train)
+    
+    # print(pd.DataFrame(gs.cv_results_).pivot_table(index="param_max_depth", columns="param_min_samples_split", values="mean_test_score"))
+    
+    # Random forest model
+    # args used:
+    #   max_sample: either number or percentage of istances of traning set used per tree
+    #       if high it uses a lot (if not all) of the data, this way having trees identical to one another so it is useless
+    #   max_features: max amount of data points each tree can see, "sqrt" is the square root of all the data points 
+    #   n_estimators: number of trees to use
+    #   n_jobs: wheter or not to use multithreadding #
+    rfm = RandomForestRegressor(max_samples=0.2, max_features="sqrt", n_estimators=200, max_depth=None, n_jobs=-1)
+    rfm.fit(X_train, y_train)
+
+    print_eval(X_val, y_val, rfm)
     
     plt.show()
     
